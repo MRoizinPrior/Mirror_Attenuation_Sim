@@ -19,10 +19,7 @@ Click the badge to launch the interactive notebook on Binder — it builds a ful
 Python environment in the cloud and opens `Mirror_Sim_Interface.ipynb` with all the
 sliders. Nothing to install; the first launch takes a minute or two.
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/YOUR-USERNAME/YOUR-REPO/HEAD?labpath=Mirror_Sim_Interface.ipynb)
-
-> Replace `YOUR-USERNAME/YOUR-REPO` in the badge link above with your GitHub
-> username and repository name once you've created the repo.
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mroizinprior/Mirror_Attenuation_Sim/HEAD?labpath=Mirror_Sim_Interface.ipynb)
 
 Prefer to run it locally instead? See "Quick start" below.
 
