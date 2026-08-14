@@ -19,11 +19,14 @@ Click the badge to launch the interactive notebook on Binder — it builds a ful
 Python environment in the cloud and opens `Mirror_Sim_Interface.ipynb` with all the
 sliders. Nothing to install; the first launch takes a minute or two.
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mroizinprior/Mirror_Attenuation_Sim/HEAD?labpath=Mirror_Sim_Interface.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/YOUR-USERNAME/YOUR-REPO/HEAD?labpath=Mirror_Sim_Interface.ipynb)
+
+> Replace `YOUR-USERNAME/YOUR-REPO` in the badge link above with your GitHub
+> username and repository name once you've created the repo.
 
 Prefer to run it locally instead? See "Quick start" below.
 
-## The four pieces
+## The pieces
 
 The code is deliberately split so each layer can be read and trusted on its own.
 
@@ -36,6 +39,7 @@ The code is deliberately split so each layer can be read and trusted on its own.
 | `run_sim.py`   | the demonstration | sweeps 4–10 keV (blind loop vs recipe), plus a convergence **budget** comparing cold vs warm start. |
 | `sample.py`    | the sample | `SampleStage` (out = rotate flat + lift 2 mm; in; rotate to grazing angle) and a grazing-incidence 200 ℓ/mm bare-Si grating diffraction model that places orders on the detector strips. |
 | `acquisition.py`| the full run | the automated recipe: per energy, sample-out mirror calibration then a sample-in grazing scan (0.2–0.7°), producing six spectra per energy, a rocking-curve summary, and (optionally) real-format `Acquisition/Frame####.dat` + `.cfg` files. |
+| `stitch.py`    | dynamic-range stitching | records a synthetic pattern at several **mirror-attenuation levels** (~10× apart), drops the saturated points, and **stitches** the exposures by fitting the (unknown, imperfect) intensity ratios from the overlaps — trading a huge single-exposure S/N range for a nearly uniform one. |
 
 ### Modeled hardware: Thorlabs PIM05
 
