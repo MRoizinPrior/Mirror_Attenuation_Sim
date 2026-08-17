@@ -167,6 +167,85 @@ def run_auto_scan(E_keV=8.0, angles=None, cap_pct=10.0, floor_pct=0.5, bracket_b
                 coating=coating, satellite_frac=satellite_frac, sigma=sigma)
 
 
+def run_energy_scan(energies=(6.0, 8.0, 10.0), angles=None, cap_pct=10.0, floor_pct=0.5,
+                    bracket_b=10.0, **kw):
+    """Run the automated scan at several photon energies.  Returns a dict with a
+    per-energy `run_auto_scan` result plus the (energy × angle) integrated
+    efficiency grid used by the summary plots."""
+    if angles is None:
+        angles = np.round(np.arange(0.20, 0.72, 0.10), 3)
+    energies = list(energies)
+    results = {E: run_auto_scan(E_keV=E, angles=angles, cap_pct=cap_pct,
+                                floor_pct=floor_pct, bracket_b=bracket_b, **kw)
+               for E in energies}
+    integ = np.array([results[E]["integ"] for E in energies])       # [energy, angle]
+    return dict(energies=np.array(energies), angles=np.array(angles),
+                results=results, integ=integ)
+
+
+def _beta_axis(det, L_m=0.504, beta_ref_deg=0.45):
+    """Exit (diffraction) grazing angle in degrees for each detector strip, matching
+    sample.diffraction_pattern's geometry."""
+    strips_per_deg = np.radians(1.0) * L_m / sample.STRIP_PITCH_M
+    return beta_ref_deg + (np.arange(det.nch) - det.beam_center) / strips_per_deg
+
+
+def plot_patterns_by_energy(escan, path="scan_patterns_by_energy.png"):
+    """One panel per energy: the stitched efficiency pattern at every grazing angle,
+    intensity vs diffraction (exit) angle."""
+    E = escan["energies"]; ang = escan["angles"]
+    nE = len(E); ncols = min(3, nE); nrows = int(np.ceil(nE / ncols))
+    fig, axes = plt.subplots(nrows, ncols, figsize=(5.2 * ncols, 3.8 * nrows), squeeze=False)
+    axes = axes.ravel()
+    cols = plt.cm.viridis(np.linspace(0, 0.9, len(ang)))
+    for e, Ei in enumerate(E):
+        res = escan["results"][Ei]
+        beta = _beta_axis(res["det"])
+        ax = axes[e]
+        for j, a in enumerate(ang):
+            ax.semilogy(beta, np.clip(res["eff"][j], 1e-7, None), lw=0.9, color=cols[j],
+                        label=f"{a:.2f}°")
+        ax.set_xlim(0.2, 1.2); ax.set_ylim(1e-6, 2)
+        ax.set_title(f"{Ei:g} keV"); ax.set_xlabel("diffraction angle β (deg)")
+        ax.set_ylabel("efficiency (per strip)"); ax.grid(True, which="both", alpha=0.25)
+        if e == 0:
+            ax.legend(fontsize=7, title="grazing", ncol=2)
+    for k in range(nE, len(axes)):
+        axes[k].axis("off")
+    fig.suptitle("Stitched diffraction patterns — diffraction angle vs intensity, per energy", fontsize=13)
+    fig.tight_layout(); fig.savefig(path, dpi=130); plt.close(fig)
+    return path
+
+
+def plot_grazing_vs_efficiency(escan, path="scan_grazing_vs_eff.png"):
+    """Grazing angle vs integrated efficiency, one curve per photon energy (rocking
+    curves)."""
+    E = escan["energies"]; ang = escan["angles"]
+    fig, ax = plt.subplots(figsize=(8, 5))
+    cols = plt.cm.plasma(np.linspace(0, 0.85, len(E)))
+    for e, Ei in enumerate(E):
+        ax.semilogy(ang, np.clip(escan["integ"][e], 1e-12, None), "o-", color=cols[e], label=f"{Ei:g} keV")
+    ax.set_xlabel("grazing angle (deg)"); ax.set_ylabel("integrated efficiency (a.u.)")
+    ax.set_title("Grazing angle vs efficiency, per energy")
+    ax.grid(True, which="both", alpha=0.3); ax.legend(title="energy", fontsize=9)
+    fig.tight_layout(); fig.savefig(path, dpi=140); plt.close(fig)
+    return path
+
+
+def plot_energy_vs_efficiency(escan, path="scan_energy_vs_eff.png"):
+    """Photon energy vs integrated efficiency, one overlaid curve per grazing angle."""
+    E = escan["energies"]; ang = escan["angles"]
+    fig, ax = plt.subplots(figsize=(8, 5))
+    cols = plt.cm.viridis(np.linspace(0, 0.9, len(ang)))
+    for j, a in enumerate(ang):
+        ax.semilogy(E, np.clip(escan["integ"][:, j], 1e-12, None), "o-", color=cols[j], label=f"{a:.2f}°")
+    ax.set_xlabel("photon energy (keV)"); ax.set_ylabel("integrated efficiency (a.u.)")
+    ax.set_title("Photon energy vs efficiency (overlaid grazing angles)")
+    ax.grid(True, which="both", alpha=0.3); ax.legend(title="grazing", fontsize=8, ncol=2)
+    fig.tight_layout(); fig.savefig(path, dpi=140); plt.close(fig)
+    return path
+
+
 def _snr_range(counts_row, mask):
     sn = np.sqrt(np.maximum(counts_row[mask], 1e-9))
     return sn.max() / sn.min() if mask.sum() else np.nan
