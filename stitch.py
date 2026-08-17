@@ -1,7 +1,7 @@
 """
 stitch.py -- multi-exposure "bracketing / stitching" of a diffraction pattern.
 
-The problem (Howard Padmore): a diffraction pattern has a huge dynamic range.
+The problem: a diffraction pattern has a huge dynamic range.
 In ONE exposure the peak might have 1e5 counts (signal-to-noise ~ sqrt(1e5) ~ 316)
 while the tail has 1e1 counts (S/N ~ 3) -- a ~100x spread in data quality. Bad.
 
@@ -45,7 +45,7 @@ from actuator import PIM05Actuator
 # ~x10 attenuation steps and drive the (non-repeatable, un-encoded) PIM05 to them.
 # Because the attenuation A(theta) = R(theta)^2 is steep and the actuator's step
 # size is uncalibrated, the delivered intensities come out only APPROXIMATELY x10
-# -- exactly Howard's "we won't know the intensities". Level 0 (dimmest, peak at
+# -- exactly the "we won't know the intensities" case. Level 0 (dimmest, peak at
 # the cap) is taken as feedback-set and exact; the brighter levels are open-loop
 # decade steps and land imperfectly. Returns the realized relative intensities.
 def mirror_intensities(E=8.0, n_levels=4, bracket=10.0, pileup_pct=10.0,

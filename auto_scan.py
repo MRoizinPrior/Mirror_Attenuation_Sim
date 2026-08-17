@@ -190,31 +190,33 @@ def _beta_axis(det, L_m=0.504, beta_ref_deg=0.45):
     return beta_ref_deg + (np.arange(det.nch) - det.beam_center) / strips_per_deg
 
 
-def plot_patterns_by_energy(escan, path="scan_patterns_by_energy.png"):
-    """One panel per energy: the stitched efficiency pattern at every grazing angle,
-    intensity vs diffraction (exit) angle."""
+def plot_pattern_grid(escan, path="scan_pattern_grid.png"):
+    """A grid of energies (rows) × grazing angles (columns): one stitched
+    diffraction pattern per cell, intensity vs diffraction (exit) angle."""
     E = escan["energies"]; ang = escan["angles"]
-    nE = len(E); ncols = min(3, nE); nrows = int(np.ceil(nE / ncols))
-    fig, axes = plt.subplots(nrows, ncols, figsize=(5.2 * ncols, 3.8 * nrows), squeeze=False)
-    axes = axes.ravel()
-    cols = plt.cm.viridis(np.linspace(0, 0.9, len(ang)))
+    nE, nA = len(E), len(ang)
+    fig, axes = plt.subplots(nE, nA, figsize=(2.55 * nA + 0.6, 2.0 * nE + 0.6),
+                             squeeze=False, sharex=True, sharey=True)
     for e, Ei in enumerate(E):
-        res = escan["results"][Ei]
-        beta = _beta_axis(res["det"])
-        ax = axes[e]
+        res = escan["results"][Ei]; beta = _beta_axis(res["det"])
         for j, a in enumerate(ang):
-            ax.semilogy(beta, np.clip(res["eff"][j], 1e-7, None), lw=0.9, color=cols[j],
-                        label=f"{a:.2f}°")
-        ax.set_xlim(0.2, 1.2); ax.set_ylim(1e-6, 2)
-        ax.set_title(f"{Ei:g} keV"); ax.set_xlabel("diffraction angle β (deg)")
-        ax.set_ylabel("efficiency (per strip)"); ax.grid(True, which="both", alpha=0.25)
-        if e == 0:
-            ax.legend(fontsize=7, title="grazing", ncol=2)
-    for k in range(nE, len(axes)):
-        axes[k].axis("off")
-    fig.suptitle("Stitched diffraction patterns — diffraction angle vs intensity, per energy", fontsize=13)
-    fig.tight_layout(); fig.savefig(path, dpi=130); plt.close(fig)
+            ax = axes[e][j]
+            ax.semilogy(beta, np.clip(res["eff"][j], 1e-7, None), lw=0.8, color="#c0392b")
+            ax.set_xlim(0.2, 1.2); ax.set_ylim(1e-6, 2)
+            ax.grid(True, which="both", alpha=0.2)
+            if e == 0:
+                ax.set_title(f"grazing {a:.2f}°", fontsize=9)
+            if j == 0:
+                ax.set_ylabel(f"{Ei:g} keV\nefficiency", fontsize=8)
+            if e == nE - 1:
+                ax.set_xlabel("β (deg)", fontsize=8)
+    fig.suptitle("Stitched diffraction patterns — energy (rows) × grazing angle (columns)", fontsize=13)
+    fig.tight_layout(); fig.savefig(path, dpi=120); plt.close(fig)
     return path
+
+
+# backward-compatible alias
+plot_patterns_by_energy = plot_pattern_grid
 
 
 def plot_grazing_vs_efficiency(escan, path="scan_grazing_vs_eff.png"):
