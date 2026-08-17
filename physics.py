@@ -101,6 +101,31 @@ def attenuation(theta_deg, E_keV):
 
 
 # --------------------------------------------------------------------------
+# Coated-sample reflectivity (e.g. Pt-coated grating on BL 5.3.1).  Separate
+# cache from the bare-Si order-sorter mirror above: this is the SAMPLE surface.
+# --------------------------------------------------------------------------
+_coat_cache = {}
+# material densities (g/cm^3) for common grating coatings
+COATING_DENSITY = {"Si": 2.33, "Pt": 21.45, "Au": 19.30, "Ni": 8.90}
+
+
+def coated_reflectivity_curve(E_keV, material="Pt", density=None, n=1200):
+    """Cached (theta_deg, R): single-surface reflectivity of a coated surface vs
+    grazing angle.  A high-Z coating (Pt/Au) pushes the critical angle out and
+    keeps R high to much steeper angles than bare Si -- the reason a coated
+    grating spans far more usable stitching decades."""
+    if density is None:
+        density = COATING_DENSITY.get(material, 2.33)
+    key = (round(float(E_keV), 4), material, round(float(density), 4))
+    if key not in _coat_cache:
+        theta = np.linspace(0.02, 1.2, n)
+        R = np.real(xraydb.mirror_reflectivity(material, theta * np.pi / 180.0,
+                                               E_keV * 1e3, density))
+        _coat_cache[key] = (theta, R)
+    return _coat_cache[key]
+
+
+# --------------------------------------------------------------------------
 # 2) Incident flux delivered to one strip, BEFORE the mirror attenuator
 # --------------------------------------------------------------------------
 def _G1(y):

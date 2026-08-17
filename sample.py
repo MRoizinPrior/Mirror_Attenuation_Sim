@@ -63,9 +63,15 @@ class SampleStage:
 # ==========================================================================
 # 2) The diffraction pattern on the detector
 # ==========================================================================
-def _sample_reflectivity(E_keV, alpha_deg):
-    """Single-surface bare-Si reflectivity at grazing angle alpha (0..1)."""
-    theta, R = physics._reflectivity_curve(E_keV)
+def _sample_reflectivity(E_keV, alpha_deg, material="Si", density=None):
+    """Single-surface reflectivity of the sample surface at grazing angle alpha
+    (0..1).  material='Si' is the bare-Si case (BL 3.3.2 commissioning grating);
+    material='Pt' models the Pt-coated grating measured on BL 5.3.1, which stays
+    reflective to much steeper angles."""
+    if material == "Si" and density is None:
+        theta, R = physics._reflectivity_curve(E_keV)
+    else:
+        theta, R = physics.coated_reflectivity_curve(E_keV, material, density)
     return float(np.interp(alpha_deg, theta, R))
 
 
@@ -97,7 +103,8 @@ def _blaze_efficiency(m, m_blaze=1, sigma=1.3):
 
 def diffraction_pattern(E_keV, alpha_deg, N_incident, det,
                         lines_per_mm=GRATING_LMM, L_m=0.504, beta_ref_deg=0.45,
-                        satellite_frac=0.06, peak_sigma_strip=0.7):
+                        satellite_frac=0.06, peak_sigma_strip=0.7,
+                        material="Si", density=None):
     """Per-strip TRUE rate (ph/s), length det.nch, for the sample at grazing alpha.
 
     L_m defaults to 0.504 m: the grating centre sits ~504 mm from the detector
@@ -112,7 +119,7 @@ def diffraction_pattern(E_keV, alpha_deg, N_incident, det,
                      report saw, relative to their neighbouring main order.
     """
     strips_per_deg = np.radians(1.0) * L_m / STRIP_PITCH_M     # deg -> strips on the detector
-    R = _sample_reflectivity(E_keV, alpha_deg)                 # overall grating reflectance
+    R = _sample_reflectivity(E_keV, alpha_deg, material, density)   # overall grating reflectance
     ch = np.arange(det.nch)
     rate = np.zeros(det.nch)
 

@@ -19,7 +19,10 @@ Click the badge to launch the interactive notebook on Binder — it builds a ful
 Python environment in the cloud and opens `Mirror_Sim_Interface.ipynb` with all the
 sliders. Nothing to install; the first launch takes a minute or two.
 
-[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/mroizinprior/mirror_attenuation_sim/HEAD?labpath=Mirror_Sim_Interface.ipynb)
+[![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/YOUR-USERNAME/YOUR-REPO/HEAD?labpath=Mirror_Sim_Interface.ipynb)
+
+> Replace `YOUR-USERNAME/YOUR-REPO` in the badge link above with your GitHub
+> username and repository name once you've created the repo.
 
 Prefer to run it locally instead? See "Quick start" below.
 
@@ -34,9 +37,10 @@ The code is deliberately split so each layer can be read and trusted on its own.
 | `detector.py`  | the measurement | turns a true rate into realistic MYTHEN2 output: per-strip Poisson counts + paralyzable pileup over `n_frames` frames of `frame_s` each, written in the **real `Acquisition/Frame####.dat` + `.cfg` format**, with the DECTRIS deadtime correction. |
 | `controller.py`| the auto-aligner | drives the actuator using **only** detector reads (never the true angle): geometric bracket → secant trim to the target pileup, plus a hold phase that trims out drift. `budget()` reports the frames/steps/time cost to converge. |
 | `run_sim.py`   | the demonstration | sweeps 4–10 keV (blind loop vs recipe), plus a convergence **budget** comparing cold vs warm start. |
-| `sample.py`    | the sample | `SampleStage` (out = rotate flat + lift 2 mm; in; rotate to grazing angle) and a grazing-incidence 200 ℓ/mm bare-Si grating diffraction model that places orders on the detector strips. |
+| `sample.py`    | the sample | `SampleStage` (out = rotate flat + lift 2 mm; in; rotate to grazing angle) and a grazing-incidence 200 ℓ/mm grating diffraction model (bare Si *or* Pt-coated) that places orders on the detector strips. |
 | `acquisition.py`| the full run | the automated recipe: per energy, sample-out mirror calibration then a sample-in grazing scan (0.2–0.7°), producing six spectra per energy, a rocking-curve summary, and (optionally) real-format `Acquisition/Frame####.dat` + `.cfg` files. |
 | `stitch.py`    | dynamic-range stitching | records a synthetic pattern at several **mirror-attenuation levels** (~10× apart), drops the saturated points, and **stitches** the exposures by fitting the (unknown, imperfect) intensity ratios from the overlaps — trading a huge single-exposure S/N range for a nearly uniform one. |
+| `auto_scan.py` | automated grating scan | the full **attenuation-outer / angle-inner** scan on a Pt-coated grating: the mirror sweeps attenuation **monotonically and never returns** (safe for the non-repeatable PIM05), holding still while the sample rotates through every grazing angle; each angle's on-scale levels are stitched blind and **I0-normalized to efficiency**. Knobs: pileup cap, floor S/N, bracket ratio (all sliders in the notebook). |
 
 ### Modeled hardware: Thorlabs PIM05
 
